@@ -1,6 +1,7 @@
 package com.qiyei.criminalintent.fragment;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -26,6 +27,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import com.qiyei.criminalintent.R;
+import com.qiyei.criminalintent.activity.PhotoViewActivity;
 import com.qiyei.criminalintent.model.Crime;
 import com.qiyei.criminalintent.model.CrimeLab;
 import com.qiyei.criminalintent.utils.Utils;
@@ -52,6 +54,7 @@ public class CrimeFragment extends Fragment {
     private ImageButton mPhotoButton;
 
     private File mPhotoFile;
+    private Callback mCallback;
 
     private static final String ARG_CRIME_ID = "crime_id";
     private static final String DIALOG_DATE = "DialogDate";
@@ -59,15 +62,16 @@ public class CrimeFragment extends Fragment {
     private static final int REQUEST_CONTACT = 2;
     private static final int REQUEST_PHOTO = 3;
 
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        UUID uuid = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
+        UUID uuid = null;
+        uuid = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
+        if (savedInstanceState != null){
+            uuid = (UUID) savedInstanceState.get("uuid");
+        }
         mCrime = CrimeLab.getInstance(getContext()).getCrime(uuid);
         mPhotoFile = CrimeLab.getInstance(getContext()).getPhotoFile(mCrime);
-
     }
 
     @Nullable
@@ -97,7 +101,7 @@ public class CrimeFragment extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 //保存输入的title
                 mCrime.setTitle(s.toString());
-                updateDate(mCrime);
+                updateCrime();
                 //mDateButton.setEnabled(false);//禁用Button
             }
 
@@ -172,14 +176,13 @@ public class CrimeFragment extends Fragment {
             }
         });
 
-
         mSolvedCheckBox.setChecked(mCrime.isSolved());
         mSolvedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 //更新crime的solved状态
                 mCrime.setSolved(isChecked);
-
+                updateCrime();
             }
         });
 
@@ -202,6 +205,18 @@ public class CrimeFragment extends Fragment {
 
         updatePhotoView();
 
+        mPhotoView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               if (mPhotoFile != null && mPhotoFile.exists()){
+                   Intent intent = new Intent(getContext(), PhotoViewActivity.class);
+                   intent.putExtra("photoView",mPhotoFile.getPath());
+                   intent.putExtra("uuid",mCrime.getId());
+                   startActivity(intent);
+               }
+            }
+        });
+
         return view;
     }
 
@@ -215,6 +230,7 @@ public class CrimeFragment extends Fragment {
         if (requestCode == REQUEST_DATA){
             Date newDate = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
             mCrime.setDate(newDate);
+            updateCrime();
             updateDate(mCrime);
         }
 
@@ -234,6 +250,7 @@ public class CrimeFragment extends Fragment {
                 cursor.moveToFirst();
                 String suspect = cursor.getString(0);
                 mCrime.setSuspect(suspect);
+                updateCrime();
                 mChooseSuspect.setText(suspect);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -244,9 +261,9 @@ public class CrimeFragment extends Fragment {
         }
 
         if (requestCode == REQUEST_PHOTO){
+            updateCrime();
             updatePhotoView();
         }
-
 
     }
 
@@ -256,6 +273,32 @@ public class CrimeFragment extends Fragment {
 
         //更新mCrime
         CrimeLab.getInstance(getContext()).updateCrime(mCrime);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable("uuid",mCrime.getId());
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mCallback = (Callback) context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallback = null;
+    }
+
+    /**
+     * 更新Crime
+     */
+    private void updateCrime(){
+        CrimeLab.getInstance(getContext()).updateCrime(mCrime);
+        mCallback.onCrimeUpdated(mCrime);
     }
 
     /**
@@ -306,7 +349,7 @@ public class CrimeFragment extends Fragment {
         }
 
         //日期格式化
-        String dateFormat = "EEE, MMM dd";
+        String dateFormat = "MMM dd ,EEE";
         String dateString = DateFormat.format(dateFormat,mCrime.getDate()).toString();
 
         String suspect = mCrime.getSuspect();
@@ -320,6 +363,15 @@ public class CrimeFragment extends Fragment {
                 ,suspect);
 
         return report;
+    }
+
+    /**
+     * 回调接口
+     */
+    public interface Callback{
+
+        void onCrimeUpdated(Crime crime);
+
     }
 
 }

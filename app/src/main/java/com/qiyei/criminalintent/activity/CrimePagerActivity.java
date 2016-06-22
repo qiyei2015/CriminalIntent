@@ -17,11 +17,12 @@ import com.qiyei.criminalintent.model.CrimeLab;
 import java.util.List;
 import java.util.UUID;
 
-public class CrimePagerActivity extends AppCompatActivity{
+public class CrimePagerActivity extends AppCompatActivity implements CrimeFragment.Callback{
 
     private ViewPager mViewPager;
     private FragmentManager fm;
     private List<Crime> mCrimeList;
+    private UUID uuid = null;
 
     private static final String EXTRA_CRIME_ID = "com.qiyei.activity.crime_id";
 
@@ -33,8 +34,7 @@ public class CrimePagerActivity extends AppCompatActivity{
         mViewPager = (ViewPager) findViewById(R.id.activity_crime_pager_view_pager);
         mCrimeList = CrimeLab.getInstance(getApplicationContext()).getCrimeList();
         fm = getSupportFragmentManager();
-
-        final UUID uuid = (UUID) getIntent().getSerializableExtra(EXTRA_CRIME_ID);
+        uuid = (UUID) getIntent().getSerializableExtra(EXTRA_CRIME_ID);
 
         mViewPager.setAdapter(new FragmentStatePagerAdapter(fm) {
             @Override
@@ -58,7 +58,12 @@ public class CrimePagerActivity extends AppCompatActivity{
                 mViewPager.setCurrentItem(i);
             }
         }
+    }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable("uuid",uuid);
     }
 
     /**
@@ -73,4 +78,8 @@ public class CrimePagerActivity extends AppCompatActivity{
         return intent;
     }
 
+    @Override
+    public void onCrimeUpdated(Crime crime) {
+
+    }
 }

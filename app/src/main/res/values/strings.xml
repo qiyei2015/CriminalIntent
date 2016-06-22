@@ -16,11 +16,11 @@
     <string name="crime_suspect_text">选择嫌疑人</string>
     <string name="crime_report_text">发送消息报告</string>
 
-    <string name="crime_report">%1$s! 这个违法行为发生在 %2$s. %3$s，%4$s</string>
+    <string name="crime_report">发现有人做了：%1$s ！已拍照了哦。时间：%2$s。是否解决：%3$s。怀疑对象：%4$s</string>
     <string name="crime_report_solved">已经解决</string>
     <string name="crime_report_unsolved">没有解决</string>
-    <string name="crime_report_no_suspect">没有嫌疑人</string>
-    <string name="crime_report_suspect">有嫌疑人</string>
+    <string name="crime_report_no_suspect">不知道是谁干的</string>
+    <string name="crime_report_suspect">有怀疑对象,暂时不公布</string>
     <string name="crime_report_subject">主题</string>
     <string name="send_report">发送报告</string>
 

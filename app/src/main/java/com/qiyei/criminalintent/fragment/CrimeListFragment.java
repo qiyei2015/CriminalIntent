@@ -1,6 +1,6 @@
 package com.qiyei.criminalintent.fragment;
 
-import android.content.Intent;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -17,7 +17,6 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.qiyei.criminalintent.R;
-import com.qiyei.criminalintent.activity.CrimePagerActivity;
 import com.qiyei.criminalintent.model.Crime;
 import com.qiyei.criminalintent.model.CrimeLab;
 import com.qiyei.criminalintent.utils.Utils;
@@ -34,6 +33,9 @@ public class CrimeListFragment extends Fragment {
     private CrimeAdapter mCrimeAdapter;
     private boolean mSubTitleVisible = false;
     private static final String SAVE_SUNTITLE_VISIBLE = "subtitle";
+
+    private Callback mCallback;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -85,8 +87,8 @@ public class CrimeListFragment extends Fragment {
             case R.id.menu_item_new_crime:
                 Crime crime = new Crime();
                 CrimeLab.getInstance(getContext()).add(crime);
-                Intent intent = CrimePagerActivity.newIntent(getContext(),crime.getId());
-                startActivity(intent);
+                updateUI();
+                mCallback.onCrimeSelected(crime);
                 break;
             case R.id.menu_item_show_subtitle:
                 mSubTitleVisible = !mSubTitleVisible;
@@ -104,10 +106,22 @@ public class CrimeListFragment extends Fragment {
         outState.putBoolean(SAVE_SUNTITLE_VISIBLE,mSubTitleVisible);
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mCallback = (Callback) context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallback = null;
+    }
+
     /**
      * 更新UI
      */
-    private void updateUI(){
+    public void updateUI(){
 
         CrimeLab lab = CrimeLab.getInstance(getContext());
         List<Crime> list = lab.getCrimeList();
@@ -175,8 +189,10 @@ public class CrimeListFragment extends Fragment {
         @Override
         public void onClick(View v) {
             //Toast.makeText(getContext(),"点击了" + mCrime.getTitle(),Toast.LENGTH_SHORT).show();
-            Intent intent = CrimePagerActivity.newIntent(getContext(),mCrime.getId());
-            startActivity(intent);
+            //Intent intent = CrimePagerActivity.newIntent(getContext(),mCrime.getId());
+            //startActivity(intent);
+            mCallback.onCrimeSelected(mCrime);
+
         }
     }
 
@@ -235,6 +251,14 @@ public class CrimeListFragment extends Fragment {
         public void setCrimeList(List<Crime> list){
             mCrimeList = list;
         }
+    }
+
+    /**
+     * Fragment 回调接口，由Activity实现，可以直接调用Activity的方法
+     */
+    public interface Callback{
+        //
+        void onCrimeSelected(Crime crime);
     }
 
 }
