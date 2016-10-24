@@ -58,6 +58,7 @@ public class CrimePagerActivity extends AppCompatActivity implements CrimeFragme
                 mViewPager.setCurrentItem(i);
             }
         }
+
     }
 
     @Override
